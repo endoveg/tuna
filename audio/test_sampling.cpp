@@ -8,7 +8,11 @@ int main() {
   syncmaster *sync0;
   sync0 = amp.capture(1);
   while (pthread_mutex_trylock(&(sync0->is_done)) == EBUSY) {
-        printf("I am waiting\n");
+    //      printf("I am waiting\n");
+  }
+  int i;
+  for (i = 0; i < 16384; i++) {
+    printf("%ld\n", amp[i]);
   }
   return(0);
 }

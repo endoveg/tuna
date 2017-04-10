@@ -10,22 +10,32 @@
 #include <unistd.h>
 #include <alsa/asoundlib.h>
 #include "sampling.h"
+#include <errno.h>
 
 void * sampling_thread(void * arg);
 syncmaster * amplitude_probes::capture(int num_for_key){
   pthread_t ptid;
   int pth;
   key_t key = ftok("nicole_boorbaki", num_for_key);
+  if (key == -1) {
+    printf("%s\n", strerror(errno));
+    return(NULL);
+  }
   syncmaster *p = (syncmaster *)malloc(sizeof(syncmaster));
   p->is_done = PTHREAD_MUTEX_INITIALIZER;
-  p->shared_meme_id = shmget(key, duration * bits_per_sample * rate,
+  p->shared_meme_id = shmget(key, count * bits_per_sample,
 			     IPC_CREAT | S_IRWXU);
+  if (p->shared_meme_id == -1) {
+    printf("%s\n", strerror(errno));
+    return(NULL);
+  }
   pthread_mutex_lock(&(p->is_done));
   sampling_thread_arg *arg = (sampling_thread_arg *)malloc(sizeof(sampling_thread_arg));
   arg->audio_stream = "plughw:1,0";
   arg->amp_params = this;
   arg->nsync = p;
   pth = pthread_create(&ptid, NULL, &sampling_thread, (void *) arg);
+  amplitudes = shmat(p->shared_meme_id, NULL, 0);
   return p;
 }
 void * sampling_thread(void * arg) {
@@ -34,7 +44,7 @@ void * sampling_thread(void * arg) {
   int i;
   int err;
   char *buffer;
-  int buffer_frames = ARG->amp_params->duration * ARG->amp_params->rate;
+  int buffer_frames = ARG->amp_params->count;
   unsigned int rate = ARG->amp_params->rate;
   snd_pcm_t *capture_handle;
   snd_pcm_hw_params_t *hw_params;
