@@ -9,59 +9,75 @@
 #include <string.h>
 #include "../audio/sampling.h"
 
-sum_info::sum_info (): raw (0, 0, 0), image (NULL), odds (NULL), evens (NULL), sample_nu (0), core_nu (0), my_nu (0)
+unsigned int bit_reverse (unsigned int x, unsigned int size)
 {
+    unsigned int result = 0;
+    unsigned int lg = log2 ((double) size);
+    while (lg > 0)
+    {
+        result = result << 1;
+        result = result + (x & 1);
+        x = x >> 1;
+        lg--;
+    }
+    return result;
 }
 
-sum_info::sum_info (amplitude_probes r, std::vector <std::complex <double> > *i, std::vector <std::complex <double> > *o,
-		    std::vector <std::complex <double> > *e, unsigned int s, unsigned int c, unsigned int m): raw (r), image (i), odds (o), evens (e), sample_nu (s), core_nu (c), my_nu (m)
+// The algoruthm requires input data to be index bit-reversed. 
+// That is, for example, if one has an array of 8 elemants, the input data order should be
+// a[0], a[4], a[2], a[6], a[1], a[3], a[5], a[7]
+ 
+void permutate_array (std::vector <std::complex <double> >& raw, const unsigned int size)
 {
+    unsigned int j = 0;
+    std::complex <double> tmp;
+    for (unsigned int i = 0; i < size; i++)
+    {
+        j = bit_reverse (i, size);
+        if (j > i)
+        {
+            tmp = raw [i];
+            raw [i] = raw [j];
+            raw [j] = tmp;
+        }
+    }
 }
-//using Cooley-Tukey algorithm
-void* calculate (void* info)
+// Cooley-Tukey radix-2 algorithm
+void fft(amplitude_probes& proto, std::vector <std::complex <double> > &image)
 {
-	sum_info* dat = (sum_info*) info;
-	for (unsigned int i = dat->my_nu; i < dat->sample_nu; i += dat->core_nu)
-	{
-		for (unsigned int j = 0; j < dat->sample_nu/2; j++)
-		{
-			(*(dat->evens))[i] += std::complex <double> (dat->raw[2 * j]) * exp (std::complex <double> (0, -4 * M_PI * j * i /dat->sample_nu));
-			(*(dat->odds))[i] += std::complex <double> (dat->raw[2 * j + 1]) * exp (std::complex <double> (0, -4 * M_PI * j * i / dat->sample_nu));
-		}
-	}
-	for (unsigned int i = dat->my_nu; i < dat->sample_nu / 2; i += dat->core_nu)
-	{
-		(*(dat->image)) [i] = (*(dat->evens))[i] + exp(std::complex <double>(0, -2 * M_PI * i / dat->sample_nu)) * (*(dat->odds)) [i];
-		(*(dat->image)) [i + dat->sample_nu / 2] = (*(dat->evens))[i] - exp(std::complex <double>(0, -2 * M_PI * i / dat->sample_nu)) * (*(dat->odds)) [i];
-
-	}
-	return NULL;
-}	
-
-void dft(amplitude_probes& proto, std::vector <std::complex <double> > &image, const unsigned int core_nu)
-{
-	const unsigned int sample_nu = proto.count;
-	std::vector <std::complex <double> > odds (sample_nu);
-	std::vector <std::complex <double> > evens (sample_nu);
-	std::vector <pthread_t> thr (core_nu);
-	std::vector <sum_info> inf (core_nu);
-	for (unsigned int i = 0; i < core_nu; i++)
-	{
-		inf[i] = sum_info (proto, &image, &odds, &evens, sample_nu, core_nu, i);
-		errno = pthread_create (thr.data() + i, NULL, calculate, (void*) (&inf[i]));
-		if (errno)
-		{
-			std::cout << strerror (errno);
-			return;
-		}
-	}
-	for (unsigned int i = 0; i < core_nu; i++)
-	{
-		errno = pthread_join (thr [i], NULL);
-		if (errno)
-		{
-			std::cout << strerror (errno);
-			return;
-		}
-	}
+    const unsigned int sample_nu = proto.count;
+    // checking whether sample_nu is a power of 2
+    // Maybe it's beter to throw an exclusion here
+    if ((sample_nu == 0) || (sample_nu & (sample_nu - 1) != 0))
+    {
+        std::cout << "Size of the array is not a power of 2!" << std::endl;
+        return;
+    }
+    unsigned int lgn = log2 (sample_nu);
+    for (unsigned int i = 0; i < sample_nu; i++)
+        image [i] = std::complex <double> (proto [i]);
+    permutate_array (image, sample_nu);
+    unsigned int m_size = 0;
+    unsigned int m_half = 0;
+    std::complex <double> twiddle;
+    std::complex <double> tmp0;
+    std::complex <double> tmp1;
+    // at the first step the permutated values are used in pairs as they go in an array
+    // to compute size-2 DFTs. This idea is implemented recursevly
+    for (unsigned int lgm = 1; lgm <= lgn; lgm++)
+    {
+        m_size = pow (2, lgm);
+        m_half = m_size / 2;
+        for (unsigned int j = 0; j < m_half; j++)
+        {
+            twiddle = exp (std::complex <double> (0, -2 * M_PI * j / m_size));
+            for (unsigned int i = 0; i <= sample_nu - m_size; i += m_size)
+            {
+                tmp0 = std::complex <double> (image [i + j]);
+                tmp1 = std::complex <double> (image [i + j + m_half]) * twiddle;
+                image [i + j] = tmp0 + tmp1;
+                image [i + j + m_half] = tmp0 - tmp1;
+            }
+        }
+    }
 }
