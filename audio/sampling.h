@@ -1,22 +1,16 @@
-#ifndef SAMPLING_H
-#define SAMPLING_H
-
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <pthread.h>
 #include <inttypes.h>
 
-struct _syncmaster {
-  pthread_mutex_t is_done;
-  int shared_meme_id;
-};
-typedef struct _syncmaster syncmaster;
+#ifndef SAMPLING_H
+#define SAMPLING_H
 
 class amplitude_probes {
- private:
-  void * amplitudes;
  public:
-  syncmaster * capture(int num_for_key);
+  void *amplitudes;
+  void capture(int num_for_key);
+  pthread_mutex_t is_done;
   unsigned int rate;
   unsigned long int count;
   short unsigned int bits_per_sample;
@@ -26,6 +20,7 @@ class amplitude_probes {
     rate = r;
     count = c;
   }
+  ~amplitude_probes();
   long int operator[] (unsigned long int m) {
     /*
       There is also 24 float, but it's harder to "decode"
@@ -44,7 +39,6 @@ class amplitude_probes {
 struct _sampling_thread_arg {
   char const* audio_stream;
   amplitude_probes * amp_params;
-  syncmaster * nsync;
 };
 
 typedef struct _sampling_thread_arg sampling_thread_arg;
