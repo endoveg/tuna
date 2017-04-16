@@ -6,9 +6,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include "dft.h"
-#include "sampling.h"
-
-#define SINGLE_CORE
+#include "../audio/sampling.h"
 
 #ifdef SINGLE_CORE
 void fft (amplitude_probes& proto, std::vector <std::complex <double> > &image)

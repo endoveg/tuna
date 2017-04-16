@@ -1,3 +1,6 @@
+#ifndef SAMPLING_H
+#define SAMPLING_H
+
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <pthread.h>
@@ -45,3 +48,4 @@ struct _sampling_thread_arg {
 };
 
 typedef struct _sampling_thread_arg sampling_thread_arg;
+#endif

@@ -133,7 +133,7 @@ void * sampling_thread(void * arg) {
 
   if ((err = snd_pcm_readi (capture_handle, buffer, buffer_frames)) != buffer_frames) {
     fprintf (stderr, "read from audio interface failed (%s)\n",
-	     err, snd_strerror (err));
+	      snd_strerror (err));
     exit (1);
   }
   //fprintf(stdout, "read %d done\n", i);

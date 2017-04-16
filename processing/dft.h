@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <complex>
-#include "sampling.h"
+#include "../audio/sampling.h"
 /*
 This class is to be passed to calculate() function in pthread_create (see fft.h)
 it is quite akward, but it is becasuse of strange design of pthread_create 

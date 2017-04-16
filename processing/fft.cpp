@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include "sampling.h"
+#include "../audio/sampling.h"
 
 sum_info::sum_info (): raw (0, 0, 0), image (NULL), odds (NULL), evens (NULL), sample_nu (0), core_nu (0), my_nu (0)
 {
