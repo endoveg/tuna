@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <vector>
 
 /* modified autocorrelation function
 I WON'T COPY IT
  */
+
 
 class acf {
  public:
@@ -25,10 +27,13 @@ class acf {
   long int index(unsigned long int x, unsigned long int y) {
     return *(is_calculated + x + y * window_size);
   }
-  long int at(unsigned long int time, unsigned long int lag);
+  long long at(unsigned long int time, unsigned long int lag);
   ~acf() {
     //free(is_calculated);
     //free(value);
+  }
+  unsigned long int get_size_of_window() {
+    return window_size;
   }
  private:
   amplitude_probes * A;
@@ -36,16 +41,6 @@ class acf {
   short int  *is_calculated;
   unsigned long int *value;
 };
-
-double amplitude_probes::yin(float threshold, unsigned int window_size) {
-  acf ACF(this, window_size);
-  long int d;
-  // t = 0, tau = 1
-  //d = ACF.at(0,0) + ACF.at(1,0) - 2 * ACF.at(0,1);
-  long int tau;
-  for(tau = 0; tau <= window_size; tau++) {
-    d = ACF.at(0,0) + ACF.at(tau,0) - 2 * ACF.at(0,tau);
-    printf("%ld\n", d);
-  }
-  return 0.0;
-}
+std::vector <unsigned long long> diff(acf& ACF, unsigned long int time);
+std::vector <double> norm (std::vector <unsigned long long>& d_of_time, unsigned long int W);
+unsigned long int abs_threshold(std::vector <double>& normalized, unsigned long int W, float threshold);
