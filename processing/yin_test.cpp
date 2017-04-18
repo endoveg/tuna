@@ -8,6 +8,7 @@ int main() {
     amplitude_probes amp = amplitude_probes(44100, length, 2);
     amp.capture(1);
     pthread_mutex_lock(&(amp.is_done));
+    printf("\e[2J");
     printf("%.2f\n", amp.yin(0.1, 2048,0));
   }
   return 0;
