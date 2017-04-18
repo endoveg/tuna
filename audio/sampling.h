@@ -34,6 +34,8 @@ class amplitude_probes {
       return (long int) *(((int16_t *)this->amplitudes) + m);
     }
   }
+  double yin(float threshold, unsigned int window_size,
+	     unsigned long int time);
 };
 
 struct _sampling_thread_arg {

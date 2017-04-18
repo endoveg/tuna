@@ -8,48 +8,44 @@ long long acf::at(unsigned long int time, unsigned long int lag) {
     for (int j = time + 1; j <= time + window_size; j++) {
       sum += (*A)[j] * (*A)[j+lag];
     }
-    //*(value + time + lag * window_size) = sum;
-    //*(is_calculated + time + lag * window_size) = 1;
     return sum;
   }
-  //assert time == 0 || time == 1
-  else //if (b_index(time, lag) == 0) {
-    {
+  else {
     long long v;
     v = this->at(time - 1, lag) -
       (*A)[time] * (*A)[time+lag] +
-      (*A)[window_size+time-lag-1] * (*A)[window_size+time-1];
-    //   *(value + time + lag * window_size) = v;
-    //    *(is_calculated + time + lag * window_size) = 1;
+      (*A)[window_size+time+lag] * (*A)[window_size+time];
     return v;
     }
-  //} else {
-  // return index(time, lag);
-  // }
 }
 
-std::vector <unsigned long long> diff(acf& ACF, unsigned long int time) {
+std::vector <unsigned long long> diff(amplitude_probes& A, unsigned long int time, acf& ACF) {
   std::vector <unsigned long long> d_t;
   unsigned int W = ACF.get_size_of_window();
   unsigned long int tau;
-  d_t.reserve(W);
-  for (tau = time+1; tau <= time + W; tau++) {
-    d_t.push_back(ACF.at(time, 0) + ACF.at(tau+time, 0) - 2 *
-		 ACF.at(time, tau));
+  unsigned long long t1, t2, t3;
+  d_t.reserve(W+1);
+  d_t.push_back(0);
+  t1 = ACF.at(time,0);
+  t2 = t1;
+  for (tau = 1; tau <= W; tau++) {
+    t3 = ACF.at(time,tau);
+    t2 += A[time+tau+W]*A[time+tau+W] - A[time+tau]*A[time+tau];
+    d_t.push_back(t1+t2 - 2*t3);
   }
   return d_t;
 }
 
 double amplitude_probes::yin(float threshold, unsigned int window_size,
 			     unsigned long int time) {
-  acf ACF(this, window_size); //step 1
-  std::vector <unsigned long long> d_of_time = diff(ACF, time); //step 2
+   acf ACF(this, window_size); //step 1
+  std::vector <unsigned long long> d_of_time = diff(*this, time, ACF); //step 2
   std::vector <double> normalized = norm(d_of_time, window_size); //step 3
   //  debug step
-    unsigned long long tau_d;
-    for (tau_d = 0; tau_d < window_size; tau_d++) {
+  /* unsigned long long tau_d;
+       for (tau_d = 0; tau_d < window_size; tau_d++) {
       printf("%.4f\n", normalized[tau_d]);
-    }
+      }*/
   unsigned long int tau = abs_threshold(normalized, window_size, threshold);
   if (tau == 0) {
     return -1;

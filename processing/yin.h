@@ -41,6 +41,6 @@ class acf {
   short int  *is_calculated;
   unsigned long int *value;
 };
-std::vector <unsigned long long> diff(acf& ACF, unsigned long int time);
+std::vector <unsigned long long> diff(amplitude_probes& A, unsigned long int time, acf& ACF);
 std::vector <double> norm (std::vector <unsigned long long>& d_of_time, unsigned long int W);
 unsigned long int abs_threshold(std::vector <double>& normalized, unsigned long int W, float threshold);
