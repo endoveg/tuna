@@ -2,6 +2,7 @@
 #include <sys/shm.h>
 #include <pthread.h>
 #include <inttypes.h>
+#include <vector>
 
 #ifndef SAMPLING_H
 #define SAMPLING_H
@@ -19,6 +20,7 @@ class amplitude_probes {
     bits_per_sample = bps;
     rate = r;
     count = c;
+    cold_start = true;
   }
   ~amplitude_probes();
   long int operator[] (unsigned long int m) {
@@ -36,6 +38,8 @@ class amplitude_probes {
   }
   double yin(float threshold, unsigned int window_size,
 	     unsigned long int time);
+  std::vector <unsigned long long> d_of_time; //needed to step with linear
+  bool cold_start;
 };
 
 struct _sampling_thread_arg {

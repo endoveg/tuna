@@ -10,7 +10,7 @@ sampling.o:
 yin.o:
 	g++ -Wall -c yin.cpp
 yin_rec.o:
-	g++ -Wall -DREC -c yin.cpp -o yin_rec.o
+	g++ -Wall -DRECURSIVE -c yin.cpp -o yin_rec.o
 yin_test.o:
 	g++ -c yin_test.cpp
 plot:

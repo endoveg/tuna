@@ -25,6 +25,7 @@ void amplitude_probes::capture(int num_for_key){
   amplitudes = malloc(rate * count * bits_per_sample);
   sampling_thread_arg *arg = (sampling_thread_arg *)malloc(sizeof(sampling_thread_arg));
   arg->audio_stream = "plughw:1,0";
+  //arg->audio_stream = "plughw:0,0";
   arg->amp_params = this;
   pth = pthread_create(&ptid, NULL, &sampling_thread, (void *) arg);
   return;	

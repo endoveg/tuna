@@ -3,7 +3,7 @@
 #include <vector>
 
 long long acf::at(unsigned long int time, unsigned long int lag) {
-#if defined REC
+#if defined RECURSIVE
   if (time == 0) {
     long long sum = 0;
     for (int j = time + 1; j <= time + window_size; j++) {
@@ -21,8 +21,8 @@ long long acf::at(unsigned long int time, unsigned long int lag) {
 #else 
   long long sum = 0;
   unsigned long int j = 0;
-  for (j=time + 1; j <= window_size + time; j++) {
-    sum += (*A)[j] * (*A)[j+lag];
+  for (j=time + 0; j <= window_size + time; j++) {
+    sum += (*A)[j] * (*A)[j+lag]; 
   }
   return sum;
 #endif
@@ -32,7 +32,7 @@ std::vector <unsigned long long> diff(amplitude_probes& A, unsigned long int tim
   std::vector <unsigned long long> d_t;
   unsigned int W = ACF.get_size_of_window();
   unsigned long int tau;
-  unsigned long long t1, t2, t3;
+  long long t1, t2, t3;
   d_t.reserve(W+1);
   d_t.push_back(0);
   t1 = ACF.at(time,0);
@@ -45,17 +45,32 @@ std::vector <unsigned long long> diff(amplitude_probes& A, unsigned long int tim
   return d_t;
 }
 
-double amplitude_probes::yin(float threshold, unsigned int window_size,
+double amplitude_probes::yin(float threshold, unsigned int W,
 			     unsigned long int time) {
-   acf ACF(this, window_size); //step 1
-  std::vector <unsigned long long> d_of_time = diff(*this, time, ACF); //step 2
-  std::vector <double> normalized = norm(d_of_time, window_size); //step 3
-  //  debug step
-  /* unsigned long long tau_d;
-       for (tau_d = 0; tau_d < window_size; tau_d++) {
-      printf("%.4f\n", normalized[tau_d]);
-      }*/
-  unsigned long int tau = abs_threshold(normalized, window_size, threshold);
+  std::vector <double> normalized;
+  if (cold_start == true) {
+    acf ACF(this, W); //step 1
+    d_of_time = diff(*this, time, ACF); //step 2
+    cold_start = false;
+  } else {
+    long long t1, t2, t3;
+    t1 = (*this)[time+W]*(*this)[time+W] - (*this)[time]*(*this)[time]; 
+    for(unsigned long int tau = 1; tau < W; tau++) {
+      t2 = (*this)[time+tau+W]*(*this)[time+tau+W] - (*this)[time+tau]*(*this)[time+tau];
+      t3 = (*this)[time+tau+W]*(*this)[time+W] - (*this)[time]*(*this)[time+tau];
+      d_of_time[tau] += t1 + t2 - 2 * t3;
+    }
+  }
+  normalized = norm(d_of_time, W); //step 3
+
+  #if defined DIFF_DEBUG
+  unsigned long long tau_d;
+  for (tau_d = 0; tau_d < W; tau_d++) {
+    printf("%.4f\n", normalized[tau_d]);
+  }
+  #endif
+
+  unsigned long int tau = abs_threshold(normalized, W, threshold); //step 4
   if (tau == 0) {
     return -1;
   } else {
