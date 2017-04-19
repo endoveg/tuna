@@ -3,6 +3,7 @@
 #include <vector>
 
 long long acf::at(unsigned long int time, unsigned long int lag) {
+#if defined REC
   if (time == 0) {
     long long sum = 0;
     for (int j = time + 1; j <= time + window_size; j++) {
@@ -17,6 +18,14 @@ long long acf::at(unsigned long int time, unsigned long int lag) {
       (*A)[window_size+time+lag] * (*A)[window_size+time];
     return v;
     }
+#else 
+  long long sum = 0;
+  unsigned long int j = 0;
+  for (j=time + 1; j <= window_size + time; j++) {
+    sum += (*A)[j] * (*A)[j+lag];
+  }
+  return sum;
+#endif
 }
 
 std::vector <unsigned long long> diff(amplitude_probes& A, unsigned long int time, acf& ACF) {
