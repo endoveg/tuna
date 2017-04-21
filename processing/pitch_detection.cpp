@@ -24,13 +24,27 @@ double Extinguishing(double* tempered_spectrum_amplitude, int i, const double ex
 		return 0;
 }
 
+double* NoiseSuppression(double* spectrum_amplitude)
+{
+	return NULL;
+}
+
 double PitchDetection(double* frequency, double* spectrum_amplitude, const unsigned int N, const double f_d)
 {
 	const double f_0 = 440.0;
 	const double delta_f = f_d / 2 / N;
 
-	const int min_index = -45;
+	const int min_index = -32;
 	const int max_index = 67;
+
+	const double subtrahend = spectrum_amplitude[(unsigned int)(f(min_index, f_0) / delta_f)];
+	for(unsigned int i = 0; i < N; i++)
+	{
+		if(spectrum_amplitude[i] < subtrahend)
+			spectrum_amplitude[i] = 0;
+		else
+			spectrum_amplitude[i] -= subtrahend;
+	}
 
 	double* tempered_spectrum_amplitude = (double*)calloc(max_index - min_index + 1, sizeof(double));
 
@@ -45,15 +59,15 @@ double PitchDetection(double* frequency, double* spectrum_amplitude, const unsig
 
 	double* extinguished_spectrum_amplitude = (double*)malloc((max_index - min_index + 1) * sizeof(double));
 	for(int i = 0; i <= max_index - min_index; i++)
-		extinguished_spectrum_amplitude[i] = Extinguishing(tempered_spectrum_amplitude, i, 1.0);
+		extinguished_spectrum_amplitude[i] = Extinguishing(tempered_spectrum_amplitude, i, 3.0);
 
-	///////////////////////
+	/*
 	std::ofstream output;
-	output.open("output.txt");
+	output.open("output_.txt");
 	for(int i = min_index; i <= max_index; i++)
 		output << f(i, f_0) << " " << extinguished_spectrum_amplitude[i - min_index] << "\n";
 	output.close();
-	///////////////////////
+	*/
 
 	double target_i;
 	double max_amplitude = 0;
@@ -87,14 +101,14 @@ double PitchDetection(double* frequency, double* spectrum_amplitude, const unsig
 
 int main()
 {
-	const unsigned int N = 1024;
+	const unsigned int N = 8192;
 	const double f_d = 44100.0;
 
 	double* frequency = (double*)malloc(N * sizeof(double));
 	double* spectrum_amplitude = (double*)malloc(N * sizeof(double));
 
 	std::ifstream source;
-	source.open("e.txt");
+	source.open("output.txt");
 	for(unsigned int i = 0; i < N; i++)
 		source >> frequency[i] >> spectrum_amplitude[i];
 	source.close();
