@@ -98,25 +98,3 @@ double PitchDetection(double* frequency, double* spectrum_amplitude, const unsig
 
 	return frequency[target_j];
 }
-
-int main()
-{
-	const unsigned int N = 8192;
-	const double f_d = 44100.0;
-
-	double* frequency = (double*)malloc(N * sizeof(double));
-	double* spectrum_amplitude = (double*)malloc(N * sizeof(double));
-
-	std::ifstream source;
-	source.open("output.txt");
-	for(unsigned int i = 0; i < N; i++)
-		source >> frequency[i] >> spectrum_amplitude[i];
-	source.close();
-
-	std::cout << "frequency: " << PitchDetection(frequency, spectrum_amplitude, N, f_d) << " Hz\n";
-
-	free(frequency);
-	free(spectrum_amplitude);
-	return 0;
-}
-
