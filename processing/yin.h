@@ -27,7 +27,7 @@ class acf {
   long int index(unsigned long int x, unsigned long int y) {
     return *(is_calculated + x + y * window_size);
   }
-  long long at(unsigned long int time, unsigned long int lag);
+  double at(unsigned long int time, unsigned long int lag);
   ~acf() {
     //free(is_calculated);
     //free(value);
@@ -41,6 +41,6 @@ class acf {
   short int  *is_calculated;
   unsigned long int *value;
 };
-std::vector <unsigned long long> diff(amplitude_probes& A, unsigned long int time, acf& ACF);
-std::vector <double> norm (std::vector <unsigned long long>& d_of_time, unsigned long int W);
+std::vector <double> diff(amplitude_probes& A, unsigned long int time, acf& ACF);
+std::vector <double> norm (std::vector <double>& d_of_time, unsigned long int W);
 unsigned long int abs_threshold(std::vector <double>& normalized, unsigned long int W, float threshold);

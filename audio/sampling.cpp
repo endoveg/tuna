@@ -17,6 +17,26 @@ amplitude_probes::~amplitude_probes() {
   free(amplitudes);
   return;
 }
+
+double amplitude_probes::get(unsigned int index) {
+  return filtered[index];
+}
+
+void amplitude_probes::set(unsigned int index, long int value) {
+    /*
+      There is also 24 float, but it's harder to "decode"
+      1 byte = 8 bit
+      2 bytes = 16 bit
+     */
+    switch (bits_per_sample) {
+    case 1:
+      *((int8_t *)amplitudes + index) = value;
+      return;
+    case 2:
+      *((int16_t *)amplitudes + index) = value;
+      return;
+    }
+}
 void amplitude_probes::capture(int num_for_key){
   pthread_t ptid;
   int pth;
@@ -24,8 +44,9 @@ void amplitude_probes::capture(int num_for_key){
   pthread_mutex_lock(&is_done);
   amplitudes = malloc(rate * count * bits_per_sample);
   sampling_thread_arg *arg = (sampling_thread_arg *)malloc(sizeof(sampling_thread_arg));
-  arg->audio_stream = "plughw:1,0";
-  //arg->audio_stream = "plughw:0,0";
+  //arg->audio_stream = "plughw:1,0";
+  //arg->audio_stream = "AUDIO_DEVICE";
+  arg->audio_stream = "plughw:0,0";
   arg->amp_params = this;
   pth = pthread_create(&ptid, NULL, &sampling_thread, (void *) arg);
   return;	

@@ -23,7 +23,7 @@ class amplitude_probes {
     cold_start = true;
   }
   ~amplitude_probes();
-  long int operator[] (unsigned long int m) {
+  int operator[] (unsigned long int m) {
     /*
       There is also 24 float, but it's harder to "decode"
       1 byte = 8 bit
@@ -31,15 +31,18 @@ class amplitude_probes {
      */
     switch (bits_per_sample) {
     case 1:
-      return (long int) *(((int8_t *)this->amplitudes) + m);
+      return *((int8_t *)amplitudes + m);
     case 2:
-      return (long int) *(((int16_t *)this->amplitudes) + m);
+      return *((int16_t *)amplitudes + m);
     }
   }
+  void set(unsigned int index, long int value);
   double yin(float threshold, unsigned int window_size,
 	     unsigned long int time);
-  std::vector <unsigned long long> d_of_time; //needed to step with linear
+  std::vector <double> d_of_time; //needed to step with linear
   bool cold_start;
+  std::vector <double> filtered;
+  double get(unsigned int index);
 };
 
 struct _sampling_thread_arg {
