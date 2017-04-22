@@ -24,3 +24,5 @@ filter_test: filter.o yin.o filter_test.o sampling.o
 	g++ -ggdb filter.o yin.o filter_test.o ../audio/sampling.o -o filter_test -lpthread -lasound
 filter_coef:
 	octave-cli make_filter.m > coef
+ring: sampling.o 
+	g++ ring_buff.h fft.cpp test_ring.cpp ../audio/sampling.cpp -lpthread -std=c++11 -lasound -g -o ring
