@@ -36,7 +36,7 @@ void* writer (ring_buffer <amplitude_probes>* ptr)
 
 void* reader (ring_buffer <amplitude_probes>* ptr)
 {
-  ptr->read (yin_tuner, 0.2, 1101);
+  ptr->read (yin_tuner, 0.1, 1101);
   return NULL;
 }
 

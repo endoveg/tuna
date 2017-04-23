@@ -9,17 +9,16 @@
 #ifndef SAMPLING_H
 #define SAMPLING_H
 
-class non_copyable
-{
+class __non_copyable {
 protected:
-    non_copyable() = default;
-    ~non_copyable() = default;
+    __non_copyable() = default;
+    ~__non_copyable() = default;
 
-    non_copyable(non_copyable const &) = delete;
-    void operator=(non_copyable const &x) = delete;
+    __non_copyable(__non_copyable const &) = delete;
+    void operator=(__non_copyable const &x) = delete;
 };
 
-class amplitude_probes: public non_copyable {
+class amplitude_probes: public __non_copyable {
  public:
   void *amplitudes;
   void capture(int num_for_key);

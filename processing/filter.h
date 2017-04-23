@@ -2,6 +2,8 @@
 #include <vector>
 #include <fstream>
 #include "../audio/sampling.h"
+#ifndef FILTER_H
+#define FILTER_H
 
 class filter {
  private:
@@ -13,7 +15,8 @@ class filter {
     M = 1;
     coef.push_back(1);
     coef.push_back(0);
-  }; //null filter
+  }; //null filter for debug purposes
   void apply(amplitude_probes* amp);
 };
 
+#endif
