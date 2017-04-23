@@ -11,7 +11,7 @@ I WON'T COPY IT
 
 class acf {
  public:
-  acf(amplitude_probes *amp, unsigned int W) {
+  acf(amplitude_probes& amp, unsigned int W) {
     //unsigned long int size = window_size * window_size;
     //value = (long int*)malloc(sizeof(long int) * size);
     //if (value == NULL) {
@@ -19,7 +19,7 @@ class acf {
     // }
     //is_calculated = (short int *)calloc(size, sizeof(short int));
     window_size = W;
-    A = amp;
+    A = &amp;
   }
   short int b_index(unsigned long int x, unsigned long int y) {
     return *(is_calculated + x + y * window_size);
@@ -44,3 +44,7 @@ class acf {
 std::vector <double> diff(amplitude_probes& A, unsigned long int time, acf& ACF);
 std::vector <double> norm (std::vector <double>& d_of_time, unsigned long int W);
 unsigned long int abs_threshold(std::vector <double>& normalized, unsigned long int W, float threshold);
+double yin(amplitude_probes& amp, float threshold, unsigned int window_size,
+	   unsigned long int time);
+void yin_tuner(amplitude_probes& amp, float threshold, unsigned int window_size);
+double quadratic_interpolation(amplitude_probes& amp, int i, int w);

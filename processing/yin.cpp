@@ -2,6 +2,7 @@
 #include "yin.h"
 #include <vector>
 
+extern double last_found_freq;
 double acf::at(unsigned long int time, unsigned long int lag) {
 #if defined RECURSIVE
   if (time == 0) {
@@ -44,23 +45,23 @@ std::vector <double> diff(amplitude_probes& A, unsigned long int time, acf& ACF)
   return d_t;
 }
 
-double amplitude_probes::yin(float threshold, unsigned int W,
+double yin(amplitude_probes &amp, float threshold, unsigned int W,
 			     unsigned long int time) {
   std::vector <double> normalized;
-  if (cold_start == true) {
-    acf ACF(this, W); //step 1
-    d_of_time = diff(*this, time, ACF); //step 2
-    cold_start = false;
+  if (amp.cold_start == true) {
+    acf ACF(amp, W); //step 1
+    amp.d_of_time = diff(amp, time, ACF); //step 2
+    amp.cold_start = false;
   } else {
     double t1, t2, t3;
-    t1 = this->get(time+W)*this->get(time+W) - this->get(time)*this->get(time); 
+    t1 = amp.get(time+W)*amp.get(time+W) - amp.get(time)*amp.get(time); 
     for(unsigned long int tau = 1; tau < W; tau++) {
-      t2 = this->get(time+tau+W)*this->get(time+tau+W) - this->get(time+tau)*this->get(time+tau);
-      t3 = this->get(time+tau+W)*this->get(time+W) - this->get(time) * this->get(time+tau);
-      d_of_time[tau] += t1 + t2 - 2 * t3;
+      t2 = amp.get(time+tau+W)*amp.get(time+tau+W) - amp.get(time+tau)*amp.get(time+tau);
+      t3 = amp.get(time+tau+W)*amp.get(time+W) - amp.get(time) * amp.get(time+tau);
+      amp.d_of_time[tau] += t1 + t2 - 2 * t3;
     }
   }
-  normalized = norm(d_of_time, W); //step 3
+  normalized = norm(amp.d_of_time, W); //step 3
 
   #if defined DIFF_DEBUG
   unsigned long long tau_d;
@@ -74,7 +75,7 @@ double amplitude_probes::yin(float threshold, unsigned int W,
   if (tau == 0) {
     return -1;
   } else {
-    return rate / (double) tau;
+    return amp.rate / (double) quadratic_interpolation(amp, tau, W);
   }
 }
 
@@ -106,10 +107,71 @@ unsigned long int abs_threshold(std::vector <double>& normalized, unsigned long 
     }
     tau++;
   }
-  if (tau == W) {
+  if (tau == W+1) {
     return 0;
   } else {
     //    printf("found:%lu\n", tau);
     return tau;
   }
 }
+
+
+void yin_tuner(amplitude_probes& amp, float threshold, unsigned int window_size) {
+  double cur_freq = yin(amp, threshold, window_size,0);
+  if (cur_freq <= 60.0) {//i means it's no on string
+    printf("%.1f\n", last_found_freq);
+  } else {
+    printf("%.1f\n", cur_freq);
+  }
+  //  printf("%.1f\n", yin(amp,threshold,window_size,0)); //it creats d_t_tau (t=0) //551 * 2 = 1102
+  for (int i = 1; i < window_size; i++) {
+    cur_freq =  yin(amp, threshold, window_size,i);
+    if (cur_freq <= 60.0) {
+      printf("%.1f\n", last_found_freq);
+    } else {
+      printf("%.1f\n", cur_freq);
+      last_found_freq = cur_freq;
+    }
+    //    printf("%.1f\n", yin(amp, threshold, window_size, i));
+ }
+}
+
+double quadratic_interpolation(amplitude_probes &amp, int x1, int W) {
+  int x0, x2;
+  double better;
+  if (x1 < 1) {
+    x0 = x1;
+  } else {
+    x0 = x1-1;
+  }
+  if (x1 + 1 < W) {
+    x2 = x1 + 1;
+  } 
+  else {
+    x2 = x1;
+  }
+  if (x0 == x1) {
+    if (amp.d_of_time[x1] <= amp.d_of_time[x2]) {
+      better = x1;
+    } 
+    else {
+      better = x2;
+    }
+  } else if (x2 == x1) {
+    if (amp.d_of_time[x1] <= amp.d_of_time[x0]) {
+      better = x1;
+    } 
+    else {
+      better = x0;
+    }
+  }
+  else {
+    double s0, s1, s2;
+    s0 = amp.d_of_time[x0];
+    s1 = amp.d_of_time[x1];
+    s2 = amp.d_of_time[x2];
+    better = x1 + (s2 - s0) / (2 * (2 * s1 - s2 - s0));
+  }
+  return better;
+}
+

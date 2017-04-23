@@ -33,6 +33,7 @@ class amplitude_probes: public non_copyable {
     rate = r;
     count = c;
     cold_start = true;
+    amplitudes = NULL;
   }
   ~amplitude_probes();
   int operator[] (unsigned long int m) {
@@ -54,8 +55,7 @@ class amplitude_probes: public non_copyable {
   }
   
   void set(unsigned int index, long int value);
-  double yin(float threshold, unsigned int window_size,
-	     unsigned long int time);
+  
   std::vector <double> d_of_time; //needed to step with linear
   bool cold_start;
   std::vector <double> filtered;
@@ -69,3 +69,4 @@ struct _sampling_thread_arg {
 
 typedef struct _sampling_thread_arg sampling_thread_arg;
 #endif
+

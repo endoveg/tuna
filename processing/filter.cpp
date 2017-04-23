@@ -14,7 +14,7 @@ filter::filter(std::ifstream& file) {
   }
 }
 
-void filter::apply(amplitude_probes& amp) {
+void filter::apply(amplitude_probes* amp) {
   /*first samples are not to be processed */
   /* There is a serious problem: it's hard to construct OK
      high pass filter that has f0 = 60 Hz with bitrate freq = 
@@ -24,17 +24,16 @@ void filter::apply(amplitude_probes& amp) {
   int i, j;
   double sum;
   double t;
-  amp.filtered.reserve(amp.count);
+  amp->filtered.reserve(amp->count);
   for (i=0; i < M; i++) {
-    amp.filtered.push_back((double) amp[i]);
+    amp->filtered.push_back((double) (*amp)[i]);
   }
-  for (i = M; i < amp.count; i++) {
+  for (i = M; i < amp->count; i++) {
     sum = 0;
     for (j = 0; j <= M; j++) {
-      sum += coef[j] * (amp[i-j]);
+      sum += coef[j] * ((*amp)[i-j]);
     }
-    t = (double) amp[i] -  sum;
-    amp.filtered.push_back(sum);
+    amp->filtered.push_back(sum);
   }
   return;
 }

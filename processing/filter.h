@@ -14,6 +14,6 @@ class filter {
     coef.push_back(1);
     coef.push_back(0);
   }; //null filter
-  void apply(amplitude_probes& amp);
+  void apply(amplitude_probes* amp);
 };
 

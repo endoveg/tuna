@@ -8,7 +8,7 @@ yin_test_rec: yin_test.o sampling.o yin_rec.o
 sampling.o:
 	g++ -c -DAUDIO_DEVICE="plughw:0,1" ../audio/sampling.cpp -o ../audio/sampling.o
 yin.o:
-	g++ -Wall  -c yin.cpp
+	g++ -ggdb -Wall  -c yin.cpp
 yin_rec.o:
 	g++ -Wall -DRECURSIVE -c yin.cpp -o yin_rec.o
 yin_test.o:
@@ -24,5 +24,5 @@ filter_test: filter.o yin.o filter_test.o sampling.o
 	g++ -ggdb filter.o yin.o filter_test.o ../audio/sampling.o -o filter_test -lpthread -lasound
 filter_coef:
 	octave-cli make_filter.m > coef
-ring: sampling.o 
-	g++ ring_buff.h fft.cpp test_ring.cpp ../audio/sampling.cpp -lpthread -std=c++11 -lasound -g -o ring
+yin_with_ring: sampling.o filter.o yin.o
+	g++ -ggdb ring_buff.h filter.o yin.o yin_with_ring.cpp ../audio/sampling.cpp -lpthread -std=c++11 -lasound -g -o yin_with_ring
