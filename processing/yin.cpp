@@ -2,7 +2,7 @@
 #include "yin.h"
 #include <vector>
 
-extern double last_found_freq;
+static double last_found_freq(440);
 /*
   If tuner loses current frequency, it remains on
   last_found_freq.

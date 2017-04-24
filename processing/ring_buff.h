@@ -6,6 +6,8 @@
 #include <semaphore.h>
 #include "../audio/sampling.h"
 
+#ifndef RING_BUFF_H
+#define RING_BUFF_H
 extern pthread_mutex_t mtx;
 extern sem_t count_sem, space_sem;
 /*
@@ -24,7 +26,7 @@ public:
     ring_buffer (unsigned int size);
     ring_buffer (const ring_buffer &to_copy);
     void write (type* x);
-    template <typename F, typename ... Args> void read (F f, Args&&... args);
+    template <typename F, typename ... Args> void read (F& f, Args&&... args);
     ~ring_buffer ();        
 };
 
@@ -61,11 +63,12 @@ template <typename type> void ring_buffer <type>::write (type* x)
 
 template <typename type>
 template <typename F, typename ... Args>
-void ring_buffer <type>::read (F f, Args&&... args)
+void ring_buffer <type>::read (F& f, Args&&... args)
 {
     sem_wait (&count_sem);
     pthread_mutex_lock (&mtx);
-    f (*(init[read_end++]), std::forward<Args>(args)...);
+   /* f (*(init[read_end++]), std::forward<Args>(args)...);*/
+    f.process(*(init[read_end++]), std::forward<Args>(args)...);
     if (read_end == length)
         read_end = 0;
     pthread_mutex_unlock (&mtx);
@@ -78,3 +81,5 @@ template <typename type> ring_buffer <type>::~ring_buffer ()
         delete init[i];
     delete init;
 }
+
+#endif
