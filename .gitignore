@@ -1,0 +1,11 @@
+#elf files
+test_sampling
+filter_test
+yin_with_ring
+processing/coef
+
+#object files
+*.o
+#debug output
+*.out
+
