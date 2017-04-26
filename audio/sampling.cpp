@@ -12,7 +12,6 @@
 #include "sampling.h"
 #include <errno.h>
 
-void * sampling_thread(void * arg);
 amplitude_probes::~amplitude_probes() {
   free(amplitudes);
   return;
@@ -37,45 +36,36 @@ void amplitude_probes::set(unsigned int index, long int value) {
       return;
     }
 }
-void amplitude_probes::capture(int num_for_key){
-  pthread_t ptid;
-  int pth;
-  is_done = PTHREAD_MUTEX_INITIALIZER;
-  pthread_mutex_lock(&is_done);
+void amplitude_probes::capture(audio_handler& audio){
   amplitudes = malloc(rate * count * bits_per_sample);
-  sampling_thread_arg *arg = (sampling_thread_arg *)malloc(sizeof(sampling_thread_arg));
-  arg->audio_stream = "plughw:1,0";
-  //arg->audio_stream = "AUDIO_DEVICE";
-  //arg->audio_stream = "plughw:0,0";
-  arg->amp_params = this;
-  pth = pthread_create(&ptid, NULL, &sampling_thread, (void *) arg);
-  return;	
-}
-void * sampling_thread(void * arg) {
-  sampling_thread_arg * ARG;
-  ARG = (sampling_thread_arg *) arg;
-  int i;
   int err;
-  int buffer_frames = ARG->amp_params->count;
-  unsigned int rate = ARG->amp_params->rate;
-  snd_pcm_t *capture_handle;
-  snd_pcm_hw_params_t *hw_params;
-  snd_pcm_format_t format = SND_PCM_FORMAT_S16_LE;
+  if ((err = snd_pcm_readi (audio.capture_handle, amplitudes, count)) != count) {
+    fprintf (stderr, "read from audio interface failed (%s)\n",
+	     snd_strerror (err));
+    exit (1);
+  }
+}
 
-  if ((err = snd_pcm_open (&capture_handle, ARG->audio_stream, SND_PCM_STREAM_CAPTURE, 0)) < 0) {
+void audio_handler::open() {
+  int err;
+  snd_pcm_hw_params_t *hw_params;
+  snd_pcm_format_t format;
+  if (bits_per_sample == 2) {
+      format = SND_PCM_FORMAT_S16_LE;
+  }
+
+  if ((err = snd_pcm_open (&capture_handle, audio_device, SND_PCM_STREAM_CAPTURE, 0)) < 0) {
     fprintf (stderr, "cannot open audio device %s (%s)\n", 
-             ARG->audio_stream,
+             audio_device,
              snd_strerror (err));
     exit (1);
   }
-
-		   
+  
   if ((err = snd_pcm_hw_params_malloc (&hw_params)) < 0) {
     fprintf (stderr, "cannot allocate hardware parameter structure (%s)\n",
              snd_strerror (err));
     exit (1);
   }
-
 				 
   if ((err = snd_pcm_hw_params_any (capture_handle, hw_params)) < 0) {
     fprintf (stderr, "cannot initialize hardware parameter structure (%s)\n",
@@ -127,18 +117,9 @@ void * sampling_thread(void * arg) {
              snd_strerror (err));
     exit (1);
   }
+}
 
-
-  
-
-  if ((err = snd_pcm_readi (capture_handle, ARG->amp_params->amplitudes, buffer_frames)) != buffer_frames) {
-    fprintf (stderr, "read from audio interface failed (%s)\n",
-	     snd_strerror (err));
-    exit (1);
-  }
-	
+void audio_handler::close() {
   snd_pcm_close (capture_handle);
-  pthread_mutex_unlock(&(ARG->amp_params->is_done));
-  return NULL;
 }
 

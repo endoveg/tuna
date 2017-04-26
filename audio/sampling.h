@@ -5,6 +5,7 @@
 #include <vector>
 #include <unistd.h>
 #include <stdio.h>
+#include <alsa/asoundlib.h>
 
 #ifndef SAMPLING_H
 #define SAMPLING_H
@@ -18,11 +19,27 @@ protected:
     void operator=(__non_copyable const &x) = delete;
 };
 
+class audio_handler {
+ private:
+  unsigned int rate;
+  short unsigned int bits_per_sample;
+  char const* audio_device;
+ public:
+  snd_pcm_t *capture_handle;
+  audio_handler(unsigned int f, short unsigned int bps, char const* ad) {
+    audio_device = ad;
+    bits_per_sample = bps;
+    rate = f;
+  }
+  void open();
+  void close();
+};
+
+
 class amplitude_probes: public __non_copyable {
  public:
   void *amplitudes;
-  void capture(int num_for_key);
-  pthread_mutex_t is_done;
+  void capture(audio_handler& audio);
   unsigned int rate;
   unsigned long int count;
   short unsigned int bits_per_sample;
@@ -65,6 +82,7 @@ struct _sampling_thread_arg {
   char const* audio_stream;
   amplitude_probes * amp_params;
 };
+
 
 typedef struct _sampling_thread_arg sampling_thread_arg;
 #endif
