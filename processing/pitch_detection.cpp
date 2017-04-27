@@ -15,18 +15,13 @@ double f(int i, double f_0)
 double Extinguishing(double* tempered_spectrum_amplitude, int i, const double extinguish_level)
 {
 	double extinguished_amplitude = tempered_spectrum_amplitude[i];
-	for(int j = 1; j <= 3; j++)
-		if(i - 12 * j >= 0)
-			extinguished_amplitude -= extinguish_level * tempered_spectrum_amplitude[i - 12 * j];
+	for(int j = 2; j <= 8; j++)
+		if(i - (int)(12 * log2((double)j) + 0.5) >= 0)
+			extinguished_amplitude -= extinguish_level * tempered_spectrum_amplitude[i - (int)(12 * log2((double)j) + 0.5)];
 	if(extinguished_amplitude > 0)
 		return extinguished_amplitude;
 	else
 		return 0;
-}
-
-double* NoiseSuppression(double* spectrum_amplitude)
-{
-	return NULL;
 }
 
 double PitchDetection(double* frequency, double* spectrum_amplitude, const unsigned int N, const double f_d)
@@ -60,14 +55,6 @@ double PitchDetection(double* frequency, double* spectrum_amplitude, const unsig
 	double* extinguished_spectrum_amplitude = (double*)malloc((max_index - min_index + 1) * sizeof(double));
 	for(int i = 0; i <= max_index - min_index; i++)
 		extinguished_spectrum_amplitude[i] = Extinguishing(tempered_spectrum_amplitude, i, 3.0);
-
-	/*
-	std::ofstream output;
-	output.open("output_.txt");
-	for(int i = min_index; i <= max_index; i++)
-		output << f(i, f_0) << " " << extinguished_spectrum_amplitude[i - min_index] << "\n";
-	output.close();
-	*/
 
 	double target_i;
 	double max_amplitude = 0;
