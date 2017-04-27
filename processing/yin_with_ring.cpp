@@ -2,9 +2,9 @@
 #include <unistd.h>
 #include <vector>
 #include <complex>
-#include "dft.h"
 #include <fstream>
 #include <signal.h>
+#include "dft.h"
 #include "../audio/sampling.h"
 #include "ring_buff.h"
 #include "yin.h"
@@ -15,6 +15,7 @@ sem_t count_sem, space_sem;
 filter *F;
 double last_found_freq = 440.0;
 bool state;
+audio_handler *audio;
 
 //this file's purpose is only to show
 //how to initialize and destroy mutex and semaphores,
@@ -23,12 +24,7 @@ bool state;
 void* writer (ring_buffer <amplitude_probes>* ptr)
 {
     amplitude_probes* amp = new amplitude_probes(22050, 4096, 2);
-    if (amp == NULL) {
-      printf("wtf?");
-      exit(1);
-    }
-    amp->capture (1);
-    pthread_mutex_lock(&amp->is_done);
+    amp->capture (*audio);
     F->apply(amp);
     ptr->write(amp);
     return NULL;
@@ -40,7 +36,7 @@ void* reader (ring_buffer <amplitude_probes>* ptr)
   return NULL;
 }
 
-void switcher (int foo)
+void switcher (int a)
 {
     state = false;
 }
@@ -64,9 +60,11 @@ void * rt (void *p) {
 
 int main ()
 {
-    const unsigned int buff_size = 16;
-    state = true;
-    pthread_mutex_init (&mtx, NULL);
+  audio = new audio_handler(22050, 2, "plughw:1,0");
+  audio->open();
+  const unsigned int buff_size = 16;
+  state = true;
+  pthread_mutex_init (&mtx, NULL);
     sem_init (&count_sem, 0, 0);
     sem_init (&space_sem, 0, buff_size);
     ring_buffer <amplitude_probes>* a = new ring_buffer <amplitude_probes> (buff_size);
@@ -84,5 +82,6 @@ int main ()
     sem_destroy (&count_sem);
     sem_destroy (&space_sem);
     delete a;
+    audio->close();
     return 0;
 }

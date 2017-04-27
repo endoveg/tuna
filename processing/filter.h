@@ -4,19 +4,36 @@
 #include "../audio/sampling.h"
 #ifndef FILTER_H
 #define FILTER_H
+/*
+  See http://www.earlevel.com/main/2003/02/28/biquads/
+*/
+
+class biquad {
+ private:
+  /*
+    H(z) = (b0 + b1/z + b2/z**2) : (a0 + a1/z + a2/z**2)
+    a0 = 1
+   */
+  double b1,b2,b0; 
+  double a1,a2,a0; 
+  double z1, z2; //temp delay registers
+  double process(double in);
+ public:
+  void apply(std::vector <double> x);
+  void apply(amplitude_probes *amp);
+  biquad (std::ifstream& file);
+};
+
 
 class filter {
  private:
-  std::vector <double> coef;
+  std::vector <biquad> cascades;
+  int k; //number of biquad cascades;
  public:
-  int M;
   filter (std::ifstream& file);
-  filter () {
-    M = 1;
-    coef.push_back(1);
-    coef.push_back(0);
-  }; //null filter for debug purposes
   void apply(amplitude_probes* amp);
 };
+
+
 
 #endif
