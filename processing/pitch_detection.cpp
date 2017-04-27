@@ -24,11 +24,6 @@ double Extinguishing(double* tempered_spectrum_amplitude, int i, const double ex
 		return 0;
 }
 
-double* NoiseSuppression(double* spectrum_amplitude)
-{
-	return NULL;
-}
-
 double PitchDetection(double* frequency, double* spectrum_amplitude, const unsigned int N, const double f_d)
 {
 	const double f_0 = 440.0;
