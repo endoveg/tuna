@@ -4,8 +4,9 @@
 #include <fstream>
 
 audio_reader::audio_reader(ring_buffer <amplitude_probes> *buffer,
-                           unsigned int c, unsigned int fs, short int bd) {
+                           unsigned int c, unsigned int fs, short int bd, audio_handler *au) {
     rb = buffer;
+    audio = au;
     count = c;
     _continue = true;
     sampling_freq = fs;
@@ -18,8 +19,7 @@ audio_reader::audio_reader(ring_buffer <amplitude_probes> *buffer,
 void audio_reader::read_samples() {
     while(_continue) {
         amplitude_probes* amp = new amplitude_probes(sampling_freq, count, bits_per_sample);
-        amp->capture (1);
-        pthread_mutex_lock(&amp->is_done);
+        amp->capture (*audio);
         F->apply(amp);
         rb->write(amp);
     }

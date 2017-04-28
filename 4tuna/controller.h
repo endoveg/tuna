@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QThread>
 #include "../processing/ring_buff.h"
+#include "../audio/sampling.h"
 #include <QPushButton>
 
 struct _yin_audio_pref {
@@ -12,6 +13,7 @@ struct _yin_audio_pref {
     unsigned int count;
     short int bits_per_sampe;
     unsigned int sampling_freq;
+    const char* device;
 };
 
 typedef struct _yin_audio_pref yin_audio_pref;
@@ -26,6 +28,7 @@ private:
     int buff_size;
     ring_buffer <amplitude_probes> *rb;
     yin_audio_pref *prefs;
+    audio_handler *audio;
 public:
     Controller(QWidget *parent, yin_audio_pref& prefs, int buff_size);
 signals:

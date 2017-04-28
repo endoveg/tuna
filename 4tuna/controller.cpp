@@ -16,9 +16,11 @@ Controller::Controller(QWidget *parent, yin_audio_pref& pref, int bfz) {
     pthread_mutex_init (&mtx, NULL);
     sem_init (&count_sem, 0, 0);
     sem_init (&space_sem, 0, buff_size);
+    audio = new audio_handler(pref.sampling_freq, pref.bits_per_sampe, pref.device);
+    audio->open();
     rb = new ring_buffer <amplitude_probes> (buff_size);
     audio_reader *ar = new audio_reader(rb, pref.count, pref.sampling_freq,
-                                        pref.bits_per_sampe);
+                                        pref.bits_per_sampe, audio);
     proc_yin *py = new proc_yin(pref.threshold, pref.window_size, rb);
     ar->moveToThread(&read_thread);
     py->moveToThread(&proc_thread);
