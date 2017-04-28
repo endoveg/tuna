@@ -25,11 +25,13 @@ class audio_handler {
   short unsigned int bits_per_sample;
   char const* audio_device;
  public:
+  int read_size;
   snd_pcm_t *capture_handle;
   audio_handler(unsigned int f, short unsigned int bps, char const* ad) {
     audio_device = ad;
     bits_per_sample = bps;
     rate = f;
+    read_size = 2048;
   }
   void open();
   void close();

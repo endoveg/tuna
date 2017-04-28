@@ -39,7 +39,6 @@ void amplitude_probes::set(unsigned int index, long int value) {
 void amplitude_probes::capture(audio_handler& audio){
   amplitudes = malloc( count * bits_per_sample);
   int err;
-  int read_size = 1024;
   int cur = 0;
   if (amplitudes == NULL) {
       fprintf(stderr, "problem with memory\n");
@@ -47,15 +46,16 @@ void amplitude_probes::capture(audio_handler& audio){
   }
   while(cur < count)  {
     if ((err = snd_pcm_readi (audio.capture_handle,
-			      (char *)amplitudes + cur*bits_per_sample, read_size)) != read_size) {
+                  (char *)amplitudes + cur*bits_per_sample,
+                              audio.read_size)) != audio.read_size) {
       if (err = -EPIPE) {
 	snd_pcm_recover(audio.capture_handle, err, 0);
-	read_size = read_size / 2;
+	audio.read_size = audio.read_size / 4;
       } else {
 	fprintf(stderr, "error while reading\n");
       }
     } else {
-      cur = cur + read_size;
+      cur = cur + audio.read_size;
     }
   }
 }
