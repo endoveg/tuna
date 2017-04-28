@@ -27,4 +27,5 @@ void audio_reader::read_samples() {
 
 void audio_reader::please_stop() {
     _continue = false;
+    emit reader_finished();
 }

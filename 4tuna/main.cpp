@@ -19,6 +19,6 @@ int main(int argc, char *argv[])
     pref.device = "plughw:1,0";
     pref.window_size = 1024;
 
-    Controller tuner(&w, pref, 16);
+    Controller tuner(&w, pref, 16, &a);
     return a.exec();
 }

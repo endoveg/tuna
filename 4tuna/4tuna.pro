@@ -46,5 +46,5 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui
 
-QMAKE_CXXFLAGS += -pthread -lasound
+QMAKE_CXXFLAGS += -pthread -lasound -std=c++11
 LIBS += -pthread -lasound

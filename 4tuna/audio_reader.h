@@ -22,7 +22,7 @@ public:
                           unsigned int c, unsigned int fs, short int bd, audio_handler *audio);
 
 signals:
-
+    void reader_finished();
 public slots:
     void read_samples();
     void please_stop();
