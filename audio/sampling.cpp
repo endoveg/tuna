@@ -39,6 +39,7 @@ void amplitude_probes::set(unsigned int index, long int value) {
 void amplitude_probes::capture(audio_handler& audio){
   amplitudes = malloc( count * bits_per_sample);
   int err;
+  int read_size = 1024;
   int cur = 0;
   if (amplitudes == NULL) {
       fprintf(stderr, "problem with memory\n");
