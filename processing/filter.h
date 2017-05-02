@@ -4,14 +4,11 @@
 #include "../audio/sampling.h"
 #ifndef FILTER_H
 #define FILTER_H
-/*
-  See http://www.earlevel.com/main/2003/02/28/biquads/
-*/
 
 class biquad {
  private:
   /*
-    H(z) = (b0 + b1/z + b2/z**2) : (a0 + a1/z + a2/z**2)
+    H(z) = (b0 + b1*z^-1 + b2*z^-2) : (a0 + a1*z^-1 + a2*z^-2)
     a0 = 1
    */
   double b1,b2,b0; 

@@ -1,6 +1,13 @@
 #include "../audio/sampling.h"
 #include "yin.h"
 #include <vector>
+/*
+  The code is based on following article:
+  "YIN, a fundamental frequency estimator for speech and music",
+  which can be found on Internet link
+  https://pdfs.semanticscholar.org/84a4/31b4d6f4afd640a2566f04da41b182f7ec30.pdf
+  Formulas are written in fortran format.
+ */
 
 static double last_found_freq(440);
 /*
@@ -9,35 +16,40 @@ static double last_found_freq(440);
  */
 
 double acf::at(unsigned int time, unsigned  int lag) {
-#if defined RECURSIVE
-  if (time == 0) {
-    double sum = 0;
-    for (unsigned int j = time + 1; j <= time + window_size; j++) {
-      sum += A.get(j) * A.get(j+lag);
-    }
-    return sum;
-  }
-  else {
-    double v;
-    v = this->at(time, lag) - A.get(time) * A.get(time + lag) +
-      A.get(window_size+time+lag)+A.get(window_size+time);
-    return v;
-    }
-#else 
+  /*
+    acf(t,tau) = 'sum(x(j)*x(tau+j),j,t+1,W+t)
+    W stands for windows size.
+    Recursive formula for acf(t,tau) is
+    acf(t,tau) = acf(t-1,tau) - x(t)*x(t+tau) + x(t+W+tau)*x(t+W)
+    The window shape is then square.
+    */
   double sum = 0;
   unsigned int j = 0;
   for (j=time + 0; j <= window_size + time; j++) {
     sum += A->get(j) * A->get(j+lag);
   }
   return sum;
-#endif
 }
 
 std::vector <double> diff(amplitude_probes& A, unsigned  int time, acf& ACF) {
+  /*
+     diff(t, tau) = 'sum((x(t+j)-x(t+j+tau))**2,j,1,W)
+     and it can be rewritten using acf:
+     diff(t, tau) = acf(t,0) + acf(t+tau,0) - 2 *acf(t, tau)
+     diff(t, tau) should be calculated for every t and tau.
+   */
   std::vector <double> d_t;
   unsigned int W = ACF.get_size_of_window();
   unsigned int tau;
   double t1, t2, t3;
+  /*
+    Calculation of diff(t, tau) for every tau and fixed t can be devide into
+    three terms.
+    t1 = acf(t,0) does not depend on tau, so it's calculated outside for loop.
+    t2 = acf(t+tau,0) depends on tau, but can be calculated using recursive
+    formula, since we know value of acf(t+tau-1, 0).
+    t3 = acf(time, tau) is the hardest one, it's calculated directly.
+   */
   d_t.reserve(W+1);
   d_t.push_back(0);
   t1 = ACF.at(time,0);
@@ -53,6 +65,23 @@ std::vector <double> diff(amplitude_probes& A, unsigned  int time, acf& ACF) {
 double yin(amplitude_probes &amp, float threshold, unsigned int W,
 			     unsigned int time) {
   std::vector <double> normalized;
+  /*
+    Basically, you MUST call yin in following way:
+    
+    for every i in range(0, window_size or amp_probes - window_size)
+    yin(amp, theshold, window_size, i)
+    because it can move calculation window over time using only O(N) operations.
+    
+    There are two modes: cold_start yin and yin, that uses
+    previously calculated values of diff(t-1,tau) (it is
+    a vector with size of a window). Again recursive formula for
+    acf is used.
+    Since diff(t,tau) = acf(t,0) + acf(t+tau,0) - 2 * acf(t,tau)
+    t1 -> acf(t,0) = acf(t-1,0) + x(time+W)*x(time+W) - x(time)*x(time)
+    does not depend on tau, is calculated outside for loop
+    t2 -> acf(t+tau,0) = acf(t-1+tau,0) + x(time+tau+W)*x(time+tau+W) - x(time+tau)*x(time+tau)
+    t3 -> acf(t,tau) = acf(t-1,tau) + x(time+W)*x(time+tau+W) - x(time+tau)*x(tau)
+   */
   if (amp.cold_start == true) {
     acf ACF(amp, W); //step 1
     amp.d_of_time = diff(amp, time, ACF); //step 2
