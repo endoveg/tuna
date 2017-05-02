@@ -18,4 +18,4 @@ filter_test: filter.o yin.o filter_test.o sampling.o filter_coef
 filter_coef:
 	python3 filter.py 
 yin_with_ring: sampling.o filter.o yin.o filter_coef
-	g++ ring_buff.h filter.o yin.o yin_with_ring.cpp ../audio/sampling.o -lpthread -lasound -std=c++11 -o yin_with_ring
+	g++ filter.o yin.o yin_with_ring.cpp ../audio/sampling.o -lpthread -lasound -std=c++11 -o yin_with_ring
