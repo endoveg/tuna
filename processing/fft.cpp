@@ -3,7 +3,6 @@
 #include <vector>
 #include <iostream>
 #include <pthread.h>
-#include "dft.h"
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -42,10 +41,9 @@ void permutate_array (std::vector <std::complex <double> >& raw, const unsigned 
         }
     }
 }
-// Cooley-Tukey radix-2 algorithm
-void fft(amplitude_probes& proto, std::vector <std::complex <double> > &image)
+
+void cfft (std::vector <std::complex <double> > & image, unsigned int sample_nu)
 {
-    const unsigned int sample_nu = proto.count;
     // checking whether sample_nu is a power of 2
     // Maybe it's beter to throw an exclusion here
     if ((sample_nu == 0) || (sample_nu & (sample_nu - 1) != 0))
@@ -54,8 +52,6 @@ void fft(amplitude_probes& proto, std::vector <std::complex <double> > &image)
         return;
     }
     unsigned int lgn = log2 (sample_nu);
-    for (unsigned int i = 0; i < sample_nu; i++)
-        image [i] = std::complex <double> (proto [i]);
     permutate_array (image, sample_nu);
     unsigned int m_size = 0;
     unsigned int m_half = 0;
@@ -79,5 +75,36 @@ void fft(amplitude_probes& proto, std::vector <std::complex <double> > &image)
                 image [i + j + m_half] = tmp0 - tmp1;
             }
         }
+    }
+}
+
+// Cooley-Tukey radix-2 algorithm
+void fft(amplitude_probes& proto, std::vector <std::complex <double> > &image, unsigned int N)
+{
+    for (unsigned int i = 0; i < N; i++)
+        image [i] = std::complex <double> (proto [i]);
+    cfft (image, N);
+}
+
+void real_fft(amplitude_probes& proto, std::vector <std::complex <double> > &image, unsigned int sample_nu, unsigned int indent)
+{
+    for (unsigned int i = 0; i < sample_nu / 2; i++)
+        image [i] = std::complex <double> (proto [2 * i + indent],
+                                           proto [2 * i + 1 + indent]);
+    cfft (image, sample_nu / 2);
+    std::vector <std::complex <double> > even (sample_nu / 2);
+    std::vector <std::complex <double> > odd (sample_nu / 2);
+    for (unsigned int i = 0; i < sample_nu / 4; i++)
+    {
+        even [i] = std::complex <double> (0.5)    * (image[i].real() + image[sample_nu / 2 - i].real()) + 
+                   std::complex <double> (0, 0.5) * (image[i].imag() - image[sample_nu / 2 - i].imag());
+        odd [i] =  std::complex <double> (0.5)    * (image[sample_nu / 2 - i].imag() + image[i].imag()) +
+                   std::complex <double> (0, 0.5) * (image[sample_nu / 2 - i].real() - image[i].real());
+        even [sample_nu / 2 - i - 1] = std::conj(even[i]);
+        odd [sample_nu / 2 - i - 1] = std::conj(odd[i]);
+    }
+    for (unsigned int i = 0; i < sample_nu / 2; i++)
+    {
+        image [i] = even [i] + exp (std::complex <double> (0, -2 * M_PI / sample_nu * i)) * odd [i];
     }
 }

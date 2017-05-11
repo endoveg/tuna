@@ -1,3 +1,5 @@
+#ifndef RING_BUFF_H
+#define RING_BUFF_H
 #include <iostream>
 #include <errno.h>
 #include <string.h>
@@ -6,8 +8,6 @@
 #include <semaphore.h>
 #include "../audio/sampling.h"
 
-#ifndef RING_BUFF_H
-#define RING_BUFF_H
 extern pthread_mutex_t mtx;
 extern sem_t count_sem, space_sem;
 /*
@@ -66,8 +66,8 @@ void ring_buffer <type>::read (F& f, Args&&... args)
 {
     sem_wait (&count_sem);
     pthread_mutex_lock (&mtx);
-   /* f (*(init[read_end++]), std::forward<Args>(args)...);*/
-    f.process(*(init[read_end++]), std::forward<Args>(args)...);
+    f (*(init[read_end++]), std::forward<Args>(args)...);
+    //f.process(*(init[read_end++]), std::forward<Args>(args)...); //NOTE! this line is for QT-involving GUI
     if (read_end == length)
         read_end = 0;
     pthread_mutex_unlock (&mtx);

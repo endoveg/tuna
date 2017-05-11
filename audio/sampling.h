@@ -31,7 +31,7 @@ class audio_handler {
     audio_device = ad;
     bits_per_sample = bps;
     rate = f;
-    read_size = 2048;
+    read_size = 1024;
   }
   void open();
   void close();
